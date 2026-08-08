@@ -10,14 +10,9 @@ Fast business experiment: prove people will pay a one-time fee (~€4.90) for a 
 
 ## Current status
 
-**Milestone 1 complete** — core dynamic QR mechanism works end-to-end locally.
+**Milestone 2 complete** — minimal product UI with static (free) and dynamic QR flows.
 
-- Create a dynamic QR pointing at our redirect URL (`/q/{slug}`)
-- Scan/open → HTTP redirect to stored destination
-- Change destination via private management URL (no accounts)
-- Same QR continues to work after destination change
-
-See [CURRENT_STATE.md](CURRENT_STATE.md) for live status.
+Open http://localhost:5173 (requires `npm run dev:web` + `npm run dev:worker`).
 
 ---
 

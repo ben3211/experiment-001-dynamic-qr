@@ -2,16 +2,16 @@
 
 **Last updated:** 2026-08-08  
 **Last verified by:** Agent  
-**Version / tag:** Milestone 1 (local)  
+**Version / tag:** Milestone 2 (local)  
 **Environment:** Local dev verified; not deployed to Cloudflare production
 
 ---
 
 ## Summary
 
-Milestone 1 is complete. The core dynamic QR mechanism works locally: create a QR pointing at our redirect URL, follow redirect to destination A, change destination via private management URL, same QR redirects to destination B.
+Milestone 1 was manually accepted. Milestone 2 is complete locally: a minimal product UI with static (free) and dynamic (€4.90 one-time, payment not live) QR flows, clear user-facing language, PNG download, and an improved management experience.
 
-No payments, accounts, branding, or production deployment yet.
+Backend architecture unchanged from Milestone 1.
 
 ---
 
@@ -19,16 +19,16 @@ No payments, accounts, branding, or production deployment yet.
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Create dynamic QR | ✅ Working | `POST /api/qr` stores slug + destination + management token |
-| Public redirect | ✅ Working | `GET /q/{slug}` → 302 to stored destination |
-| Private management read | ✅ Working | `GET /api/manage/{slug}/{token}` |
-| Private management update | ✅ Working | `PUT /api/manage/{slug}/{token}`; invalid token → 404 |
-| QR encodes redirect URL | ✅ Working | Client-side `qrcode` library; not destination URL |
-| React create UI | ✅ Working | http://localhost:5173 |
-| React manage UI | ✅ Working | http://localhost:5173/manage/{slug}/{token} |
-| D1 persistence | ✅ Working | Local D1 via Wrangler |
-| Worker tests | ✅ Working | 3 Vitest integration tests pass |
-| Web production build | ✅ Working | `npm run build --prefix web` |
+| Product landing + value proposition | ✅ Working | Clear headline and static/dynamic picker |
+| Static QR (free, client-side) | ✅ Working | No backend; direct destination encoding |
+| Dynamic QR create + result UX | ✅ Working | Three concepts clearly separated |
+| QR PNG download | ✅ Working | Static and dynamic |
+| Private management page | ✅ Working | QR shown; save confirmation; no reprint messaging |
+| Copy management link | ✅ Working | Clipboard button on create result |
+| Public redirect | ✅ Working | Same QR resolves to updated destination |
+| Worker tests | ✅ Working | 3/3 pass (unchanged backend) |
+| Web production build | ✅ Working | |
+| Browser UI verification | ✅ Working | Create, manage, static flows tested |
 
 ---
 
@@ -36,7 +36,7 @@ No payments, accounts, branding, or production deployment yet.
 
 | Item | Owner | Branch / PR | Notes |
 |------|-------|-------------|-------|
-| — | — | — | Nothing active; Milestone 2 not started |
+| — | — | — | Milestone 3 not started |
 
 ---
 
@@ -44,7 +44,7 @@ No payments, accounts, branding, or production deployment yet.
 
 | ID | Severity | Description | Workaround | Tracking |
 |----|----------|-------------|------------|----------|
-| — | — | None blocking M1 | — | — |
+| — | — | None blocking M2 | — | — |
 
 ---
 
@@ -52,10 +52,9 @@ No payments, accounts, branding, or production deployment yet.
 
 | Item | Impact | Suggested action |
 |------|--------|------------------|
-| Worker and web run on separate origins locally | Low | Accept for M1; unify under Cloudflare in M4 |
-| D1 database ID is placeholder | Medium | Create real D1 DB and update `wrangler.toml` before deploy |
-| No scan counting | Low | Optional in later milestone |
-| No rate limiting on create | Low | Add if abused in production |
+| Dynamic QR free during M2 testing | Low | Gate behind Stripe in M3 |
+| Worker and web on separate origins locally | Low | Unify on deploy (M4) |
+| D1 database ID is placeholder | Medium | Real D1 before production |
 
 ---
 
@@ -63,6 +62,8 @@ No payments, accounts, branding, or production deployment yet.
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-08-08 | Milestone 2: product UI, static QR, download, UX polish | Agent |
+| 2026-08-08 | Milestone 1 accepted (manual) | Owner |
 | 2026-08-08 | Milestone 1: Worker + D1 + React UI + tests | Agent |
 
 ---
@@ -71,7 +72,7 @@ No payments, accounts, branding, or production deployment yet.
 
 | Blocker | Impact | Needed to unblock |
 |---------|--------|-------------------|
-| Cloudflare account login for deploy | Blocks production | Human `wrangler login` + D1 provisioning (Milestone 4) |
+| Cloudflare deploy + Stripe | Blocks real customers | M3 + M4 |
 
 ---
 
@@ -80,14 +81,15 @@ No payments, accounts, branding, or production deployment yet.
 | Check | Status | Last run |
 |-------|--------|----------|
 | Web build | ✅ | 2026-08-08 |
-| Worker unit/integration tests | ✅ (3/3) | 2026-08-08 |
-| Local smoke test (create → redirect → update → redirect) | ✅ | 2026-08-08 |
-| Physical QR scan acceptance | ➖ | Requires human with phone |
+| Worker tests | ✅ (3/3) | 2026-08-08 |
+| Browser UI (create/manage/static) | ✅ | 2026-08-08 |
+| Dynamic redirect after manage save | ✅ | 2026-08-08 |
+| PNG download click | ➖ | Not auto-verified (browser download) |
+| Mobile layout on real device | ➖ | CSS responsive; human check recommended |
 
 ---
 
 ## Next Steps
 
-1. **Human acceptance test** — follow steps in README / completion report
-2. **Milestone 2** — minimal product UI (static QR free tier, basic landing) — not started
-3. **Milestone 3** — Stripe one-time payment — not started
+1. **Human acceptance test** for Milestone 2
+2. **Milestone 3** — Stripe one-time payment for dynamic QR

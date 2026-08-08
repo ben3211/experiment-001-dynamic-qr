@@ -1,11 +1,16 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getManagedQr, updateManagedQr } from "./api";
+import { Layout } from "./components/Layout";
+import { QrDisplay } from "./components/QrDisplay";
+import { generateQrDataUrl } from "./qr-utils";
 
 export function ManagePage() {
   const { slug, token } = useParams<{ slug: string; token: string }>();
   const [destinationUrl, setDestinationUrl] = useState("");
+  const [newDestination, setNewDestination] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -13,18 +18,20 @@ export function ManagePage() {
 
   useEffect(() => {
     if (!slug || !token) {
-      setError("Invalid management URL");
+      setError("This management link is not valid.");
       setLoading(false);
       return;
     }
 
     getManagedQr(slug, token)
-      .then((data) => {
+      .then(async (data) => {
         setDestinationUrl(data.destinationUrl);
+        setNewDestination(data.destinationUrl);
         setRedirectUrl(data.redirectUrl);
+        setQrDataUrl(await generateQrDataUrl(data.redirectUrl));
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to load QR");
+        setError(err instanceof Error ? err.message : "Could not load QR");
       })
       .finally(() => setLoading(false));
   }, [slug, token]);
@@ -40,57 +47,114 @@ export function ManagePage() {
     setError(null);
 
     try {
-      const updated = await updateManagedQr(slug, token, destinationUrl.trim());
+      const updated = await updateManagedQr(slug, token, newDestination.trim());
       setDestinationUrl(updated.destinationUrl);
-      setSavedMessage("Destination updated. The same QR now redirects here.");
+      setNewDestination(updated.destinationUrl);
+      setSavedMessage(updated.destinationUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update");
+      setError(err instanceof Error ? err.message : "Could not save changes");
     } finally {
       setSaving(false);
     }
   }
 
   if (loading) {
-    return <main className="page">Loading...</main>;
+    return (
+      <Layout showHomeLink>
+        <p className="loading-text">Loading your QR…</p>
+      </Layout>
+    );
   }
 
   if (error && !destinationUrl) {
     return (
-      <main className="page">
-        <p className="error">{error}</p>
-        <Link to="/">Back to create</Link>
-      </main>
+      <Layout showHomeLink>
+        <div className="card">
+          <p className="message error">{error}</p>
+          <Link to="/" className="text-link">
+            Create a new QR
+          </Link>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <main className="page">
-      <h1>Manage dynamic QR</h1>
-      <p className="hint">
-        Public redirect URL (unchanged when you edit destination):{" "}
-        <a href={redirectUrl}>{redirectUrl}</a>
-      </p>
+    <Layout showHomeLink>
+      <section className="hero compact">
+        <h1>Manage your dynamic QR</h1>
+        <p className="hero-subtitle">
+          Change where your QR sends people. Your printed QR code stays exactly
+          the same — no reprint needed.
+        </p>
+      </section>
 
-      <form onSubmit={handleSubmit} className="card">
-        <label htmlFor="destination">Destination URL</label>
-        <input
-          id="destination"
-          type="url"
-          value={destinationUrl}
-          onChange={(event) => setDestinationUrl(event.target.value)}
-          required
-        />
-        <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Update destination"}
-        </button>
-      </form>
+      {savedMessage ? (
+        <div className="message success-banner" role="status">
+          <strong>Saved!</strong> Your QR code is unchanged. It now sends
+          people to{" "}
+          <a href={savedMessage} className="inline-link">
+            {savedMessage}
+          </a>
+          .
+        </div>
+      ) : null}
 
-      {savedMessage ? <p className="success">{savedMessage}</p> : null}
-      {error ? <p className="error">{error}</p> : null}
+      <div className="manage-grid">
+        <section className="card result-card">
+          <h2>Your dynamic QR</h2>
+          <p className="section-help">
+            This is the same QR you printed or downloaded. It does not change
+            when you update the destination.
+          </p>
+          {qrDataUrl ? (
+            <QrDisplay
+              dataUrl={qrDataUrl}
+              alt="Your dynamic QR code"
+              downloadFilename="dynamic-qr.png"
+            />
+          ) : null}
+        </section>
 
-      <p>
-        <Link to="/">Create another QR</Link>
-      </p>
-    </main>
+        <section className="card result-card">
+          <h2>Current destination</h2>
+          <p className="section-help">
+            Where people go when they scan your QR right now.
+          </p>
+          <div className="detail-block">
+            <a href={destinationUrl} className="detail-value link break">
+              {destinationUrl}
+            </a>
+          </div>
+
+          <form onSubmit={handleSubmit} className="manage-form">
+            <label htmlFor="new-destination">New destination</label>
+            <input
+              id="new-destination"
+              type="url"
+              value={newDestination}
+              onChange={(event) => setNewDestination(event.target.value)}
+              placeholder="https://your-new-website.com"
+              required
+            />
+            <button type="submit" className="btn-primary" disabled={saving}>
+              {saving ? "Saving…" : "Save new destination"}
+            </button>
+          </form>
+
+          {error ? <p className="message error">{error}</p> : null}
+
+          <p className="reminder">
+            After saving, test by scanning your existing QR — it should open
+            the new destination. You do not need a new QR code.
+          </p>
+        </section>
+      </div>
+
+      <details className="technical-details">
+        <summary>Technical details</summary>
+        <p className="muted break">{redirectUrl}</p>
+      </details>
+    </Layout>
   );
 }

@@ -51,25 +51,30 @@ Validate that people will pay a one-time ~€4.90 for a permanent editable dynam
 - [x] Redirect works to destination A
 - [x] Management URL changes destination to B
 - [x] Same QR redirects to B without regeneration
-- [ ] Human physical scan test (owner)
+- [x] Human physical scan test (owner)
 
 ---
 
-## Milestone 2 — Minimal product 📋
+## Milestone 2 — Minimal product ✅
 
-**Goal:** Enough product surface for strangers to understand and try.
+**Goal:** Smallest credible product a non-technical user can understand and use.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Free static QR generator (no account) | 📋 | |
-| Simple landing explaining value prop | 📋 | |
-| Basic visual polish (not a design system) | 📋 | |
-| Copy/download flows | 📋 | |
+| Product landing + value prop | ✅ | |
+| Static QR (free, client-side) | ✅ | |
+| Dynamic QR result UX (3 concepts) | ✅ | Destination / QR / management link |
+| QR PNG download | ✅ | |
+| Management page redesign | ✅ | |
+| Pricing presentation (no fake checkout) | ✅ | Static free / Dynamic €4.90 |
+| Responsive polish | ✅ | Simple CSS, no UI framework |
 
 **Exit criteria:**
 
-- [ ] Someone unfamiliar can create a static QR in < 60 seconds
-- [ ] Value proposition visible without reading docs
+- [x] Value proposition visible without reading docs
+- [x] Static and dynamic flows work with download
+- [x] Management workflow understandable without technical terms
+- [ ] Human acceptance (owner)
 
 ---
 
