@@ -97,3 +97,4 @@ docker-compose.override.yml
 .wrangler/
 .dev.vars
 web/dist/
+*.tsbuildinfo
