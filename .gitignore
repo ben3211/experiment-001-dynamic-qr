@@ -94,3 +94,6 @@ cdk.out/
 docker-compose.override.yml
 
 # --- Project-specific (add below) ---
+.wrangler/
+.dev.vars
+web/dist/

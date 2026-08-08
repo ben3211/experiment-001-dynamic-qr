@@ -1,0 +1,11 @@
+{
+  "name": "experiment-001-dynamic-qr",
+  "private": true,
+  "scripts": {
+    "dev:worker": "npm run dev --prefix worker",
+    "dev:web": "npm run dev --prefix web",
+    "build:web": "npm run build --prefix web",
+    "test": "npm run test --prefix worker",
+    "db:migrate:local": "npm run db:migrate:local --prefix worker"
+  }
+}

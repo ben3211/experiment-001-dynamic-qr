@@ -1,42 +1,42 @@
 # Current State
 
-> **Template:** Keep this file updated as the project evolves. Remove completed items from "In Progress" and fixed bugs from "Known Issues."
-
-**Last updated:** `[YYYY-MM-DD]`  
-**Last verified by:** `[NAME or AGENT]`  
-**Version / tag:** `[v0.0.0 or commit SHA]`  
-**Environment:** `[local / staging / production — status summary]`
+**Last updated:** 2026-08-08  
+**Last verified by:** Agent  
+**Version / tag:** Milestone 1 (local)  
+**Environment:** Local dev verified; not deployed to Cloudflare production
 
 ---
 
 ## Summary
 
-<!-- 2–4 sentences: what is the project doing right now? -->
+Milestone 1 is complete. The core dynamic QR mechanism works locally: create a QR pointing at our redirect URL, follow redirect to destination A, change destination via private management URL, same QR redirects to destination B.
 
-`[CURRENT_STATUS_SUMMARY]`
+No payments, accounts, branding, or production deployment yet.
 
 ---
 
 ## What Works
 
-Features and flows that are implemented and verified:
-
 | Area | Status | Notes |
 |------|--------|-------|
-| `[FEATURE_1]` | ✅ Working | `[NOTES]` |
-| `[FEATURE_2]` | ✅ Working | `[NOTES]` |
-| `[FEATURE_3]` | 🟡 Partial | `[WHAT WORKS / WHAT DOESN'T]` |
+| Create dynamic QR | ✅ Working | `POST /api/qr` stores slug + destination + management token |
+| Public redirect | ✅ Working | `GET /q/{slug}` → 302 to stored destination |
+| Private management read | ✅ Working | `GET /api/manage/{slug}/{token}` |
+| Private management update | ✅ Working | `PUT /api/manage/{slug}/{token}`; invalid token → 404 |
+| QR encodes redirect URL | ✅ Working | Client-side `qrcode` library; not destination URL |
+| React create UI | ✅ Working | http://localhost:5173 |
+| React manage UI | ✅ Working | http://localhost:5173/manage/{slug}/{token} |
+| D1 persistence | ✅ Working | Local D1 via Wrangler |
+| Worker tests | ✅ Working | 3 Vitest integration tests pass |
+| Web production build | ✅ Working | `npm run build --prefix web` |
 
 ---
 
 ## In Progress
 
-Active work — avoid conflicting changes in these areas:
-
 | Item | Owner | Branch / PR | Notes |
 |------|-------|-------------|-------|
-| `[TASK_1]` | `[OWNER]` | `[BRANCH_OR_PR]` | `[NOTES]` |
-| `[TASK_2]` | `[OWNER]` | `[BRANCH_OR_PR]` | `[NOTES]` |
+| — | — | — | Nothing active; Milestone 2 not started |
 
 ---
 
@@ -44,7 +44,7 @@ Active work — avoid conflicting changes in these areas:
 
 | ID | Severity | Description | Workaround | Tracking |
 |----|----------|-------------|------------|----------|
-| `[ISSUE-001]` | `[Critical / High / Medium / Low]` | `[DESCRIPTION]` | `[WORKAROUND or none]` | `[ISSUE_LINK]` |
+| — | — | None blocking M1 | — | — |
 
 ---
 
@@ -52,18 +52,18 @@ Active work — avoid conflicting changes in these areas:
 
 | Item | Impact | Suggested action |
 |------|--------|------------------|
-| `[DEBT_1]` | `[Low / Medium / High]` | `[ACTION]` |
+| Worker and web run on separate origins locally | Low | Accept for M1; unify under Cloudflare in M4 |
+| D1 database ID is placeholder | Medium | Create real D1 DB and update `wrangler.toml` before deploy |
+| No scan counting | Low | Optional in later milestone |
+| No rate limiting on create | Low | Add if abused in production |
 
 ---
 
 ## Recent Changes
 
-<!-- Most recent first. Trim entries older than ~30 days unless still relevant. -->
-
 | Date | Change | Author |
 |------|--------|--------|
-| `[YYYY-MM-DD]` | `[DESCRIPTION]` | `[NAME]` |
-| `[YYYY-MM-DD]` | `[DESCRIPTION]` | `[NAME]` |
+| 2026-08-08 | Milestone 1: Worker + D1 + React UI + tests | Agent |
 
 ---
 
@@ -71,7 +71,7 @@ Active work — avoid conflicting changes in these areas:
 
 | Blocker | Impact | Needed to unblock |
 |---------|--------|-------------------|
-| `[BLOCKER_1]` | `[IMPACT]` | `[WHAT IS NEEDED]` |
+| Cloudflare account login for deploy | Blocks production | Human `wrangler login` + D1 provisioning (Milestone 4) |
 
 ---
 
@@ -79,17 +79,15 @@ Active work — avoid conflicting changes in these areas:
 
 | Check | Status | Last run |
 |-------|--------|----------|
-| Build | `[✅ / ❌ / ➖]` | `[DATE]` |
-| Unit tests | `[✅ / ❌ / ➖]` | `[DATE]` |
-| Integration tests | `[✅ / ❌ / ➖]` | `[DATE]` |
-| Lint | `[✅ / ❌ / ➖]` | `[DATE]` |
+| Web build | ✅ | 2026-08-08 |
+| Worker unit/integration tests | ✅ (3/3) | 2026-08-08 |
+| Local smoke test (create → redirect → update → redirect) | ✅ | 2026-08-08 |
+| Physical QR scan acceptance | ➖ | Requires human with phone |
 
 ---
 
 ## Next Steps
 
-Immediate priorities (should align with [ROADMAP.md](ROADMAP.md)):
-
-1. `[NEXT_STEP_1]`
-2. `[NEXT_STEP_2]`
-3. `[NEXT_STEP_3]`
+1. **Human acceptance test** — follow steps in README / completion report
+2. **Milestone 2** — minimal product UI (static QR free tier, basic landing) — not started
+3. **Milestone 3** — Stripe one-time payment — not started

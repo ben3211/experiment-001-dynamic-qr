@@ -1,139 +1,132 @@
 # Architectural Decision Records (ADRs)
 
-> **Template:** Log significant technical decisions here. One entry per decision. Keep entries short and durable.
-
-**Format:** Each ADR has a status, context, decision, and consequences.
-
-**Status values:** `Proposed` | `Accepted` | `Deprecated` | `Superseded by ADR-XXX`
-
 ---
 
 ## Index
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
-| ADR-001 | `[SHORT_TITLE]` | `[STATUS]` | `[YYYY-MM-DD]` |
-| ADR-002 | `[SHORT_TITLE]` | `[STATUS]` | `[YYYY-MM-DD]` |
+| ADR-001 | Cloudflare Workers + D1 stack | Accepted | 2026-08-08 |
+| ADR-002 | URL token auth instead of accounts | Accepted | 2026-08-08 |
+| ADR-003 | Skip clean-architecture layering for M1 | Accepted | 2026-08-08 |
+| ADR-004 | Client-side QR generation | Accepted | 2026-08-08 |
 
 ---
 
-## ADR-001: `[DECISION_TITLE]`
+## ADR-001: Cloudflare Workers + D1 stack
 
-**Status:** `[Proposed / Accepted / Deprecated / Superseded]`  
-**Date:** `[YYYY-MM-DD]`  
-**Deciders:** `[NAMES]`  
-**Tags:** `[architecture, database, api, etc.]`
+**Status:** Accepted  
+**Date:** 2026-08-08  
+**Tags:** infrastructure, database
 
 ### Context
 
-<!-- What problem or question prompted this decision? -->
-
-`[DESCRIBE_CONTEXT_AND_FORCES]`
+Need the smallest stack that supports HTTP redirects at the edge, persistent storage, and low operating cost for a business experiment.
 
 ### Decision
 
-<!-- What was decided? State clearly and concisely. -->
-
-We will `[DECISION_STATEMENT]`.
+Use **Cloudflare Workers** for API + redirect handling and **Cloudflare D1** for storage. React + Vite for UI.
 
 ### Alternatives considered
 
 | Option | Pros | Cons |
 |--------|------|------|
-| `[OPTION_A]` | `[PROS]` | `[CONS]` |
-| `[OPTION_B]` | `[PROS]` | `[CONS]` |
+| Workers + D1 | Low cost, fast redirects, minimal ops | Cloudflare-specific |
+| Supabase + Vercel | Familiar DX | More moving parts, higher idle cost |
+| Single Node server + SQLite | Simple mental model | Requires hosting, scaling overhead |
 
 ### Consequences
 
-**Positive:**
+**Positive:** Near-zero idle cost; redirect latency suitable for QR scans.
 
-- `[CONSEQUENCE_1]`
-- `[CONSEQUENCE_2]`
-
-**Negative / trade-offs:**
-
-- `[TRADE_OFF_1]`
-- `[TRADE_OFF_2]`
-
-**Follow-up:**
-
-- [ ] `[ACTION_ITEM_IF_ANY]`
+**Negative:** Requires Cloudflare account for production; local dev uses Wrangler/Miniflare.
 
 ---
 
-## ADR-002: `[DECISION_TITLE]`
+## ADR-002: URL token auth instead of accounts
 
-**Status:** `[STATUS]`  
-**Date:** `[YYYY-MM-DD]`  
-**Deciders:** `[NAMES]`  
-**Tags:** `[TAGS]`
+**Status:** Accepted  
+**Date:** 2026-08-08  
+**Tags:** security, auth
 
 ### Context
 
-`[CONTEXT]`
+Dynamic QR owners must edit destinations without building login, password reset, email verification, etc.
 
 ### Decision
 
-`[DECISION]`
+Generate a **64-character hex management token** at creation. The URL `/manage/{slug}/{token}` (and matching API paths) is the sole credential.
 
 ### Alternatives considered
 
 | Option | Pros | Cons |
 |--------|------|------|
-| `[OPTION_A]` | | |
-| `[OPTION_B]` | | |
+| URL token | Zero auth infrastructure | Lost URL = lost access |
+| Email magic links | Recoverable | Requires email infra |
+| Full accounts | Familiar SaaS pattern | Too slow for experiment |
 
 ### Consequences
 
-**Positive:**
+**Positive:** Ships in hours, not weeks.
 
-- `[ITEM]`
+**Negative:** Users must save management URL; no recovery flow in M1.
 
-**Negative / trade-offs:**
+---
 
-- `[ITEM]`
+## ADR-003: Skip clean-architecture layering for M1
+
+**Status:** Accepted  
+**Date:** 2026-08-08  
+**Tags:** architecture
+
+### Context
+
+Template `DEVELOPMENT_GUIDELINES.md` recommends domain/application/infrastructure layers. This experiment prioritizes speed.
+
+### Decision
+
+Single Worker file with route handlers + D1 SQL. Flat React components. **Revisit only if** the codebase becomes hard to change.
+
+### Consequences
+
+**Positive:** Minimal files, fast iteration.
+
+**Negative:** May require refactor if experiment succeeds and scope grows.
+
+---
+
+## ADR-004: Client-side QR generation
+
+**Status:** Accepted  
+**Date:** 2026-08-08  
+**Tags:** frontend
+
+### Context
+
+Need PNG QR in browser for create flow.
+
+### Decision
+
+Use the `qrcode` npm package in the browser. Encode the **redirect URL** returned by the API.
+
+### Alternatives considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Client `qrcode` | No server rendering; instant preview | Large bundle acceptable for M1 |
+| Server-generated PNG | Consistent output | Extra Worker code |
+
+### Consequences
+
+**Positive:** Worker stays thin; QR updates automatically if `redirectUrl` changes.
+
+**Negative:** Bundle size (~85KB gzip) acceptable for now.
 
 ---
 
 ## How to Add a New ADR
 
-1. Copy the ADR-002 section above as a template.
-2. Assign the next sequential ID (`ADR-003`, etc.).
-3. Add a row to the index table.
+1. Copy an existing entry.
+2. Assign next ID.
+3. Add to index.
 4. Set status to `Proposed` until reviewed, then `Accepted`.
-5. If a later decision replaces this one, set status to `Superseded by ADR-XXX` — do not delete old entries.
-
----
-
-## Template (copy for new entries)
-
-```markdown
-## ADR-XXX: [TITLE]
-
-**Status:** Proposed
-**Date:** YYYY-MM-DD
-**Deciders:** [NAMES]
-**Tags:** [tags]
-
-### Context
-
-[What is the issue?]
-
-### Decision
-
-[What is the change?]
-
-### Alternatives considered
-
-| Option | Pros | Cons |
-|--------|------|------|
-| | | |
-
-### Consequences
-
-**Positive:**
--
-
-**Negative / trade-offs:**
--
-```

@@ -1,27 +1,22 @@
 # Roadmap
 
-> **Template:** Replace placeholders and adjust phases to match your project. Review and reprioritize regularly.
-
-**Last reviewed:** `[YYYY-MM-DD]`  
-**Horizon:** `[e.g. next 3 months / Q3 2026]`
+**Last reviewed:** 2026-08-08  
+**Horizon:** Fast experiment — weeks, not quarters
 
 ---
 
 ## Vision
 
-<!-- Where should this project be in 6–12 months? -->
-
-`[LONG_TERM_VISION]`
+Validate that people will pay a one-time ~€4.90 for a permanent editable dynamic QR. If revenue > €0, iterate; if not, stop cheaply.
 
 ---
 
 ## Guiding Principles
 
-Prioritization criteria for this project:
-
-1. `[PRINCIPLE_1 — e.g. Ship smallest useful slice first]`
-2. `[PRINCIPLE_2 — e.g. Stability before new features]`
-3. `[PRINCIPLE_3 — e.g. Reduce operational burden]`
+1. **Speed over sophistication** — smallest credible implementation per milestone
+2. **Evidence before features** — nothing from the NOT NOW list without proof
+3. **Manual is fine** — no admin dashboard, no automation theater
+4. **One KPI** — revenue > €0
 
 ---
 
@@ -37,78 +32,107 @@ Prioritization criteria for this project:
 
 ---
 
-## Phase 0 — Foundation
+## Milestone 1 — Core mechanism ✅
 
-**Goal:** `[e.g. Repo setup, CI, hello-world deploy]`
+**Goal:** Prove dynamic QR redirect + edit without regenerating QR.
 
-| Item | Status | Target | Notes |
-|------|--------|--------|-------|
-| Project scaffold and docs | `[STATUS]` | `[DATE]` | |
-| CI pipeline (build + test) | `[STATUS]` | `[DATE]` | |
-| Local dev environment documented | `[STATUS]` | `[DATE]` | |
-| `[MILESTONE_1]` | `[STATUS]` | `[DATE]` | |
-
----
-
-## Phase 1 — Core MVP
-
-**Goal:** `[DESCRIBE_MVP_OUTCOME]`
-
-| Item | Status | Priority | Notes |
-|------|--------|----------|-------|
-| `[FEATURE_A]` | `[STATUS]` | `[P0 / P1 / P2]` | |
-| `[FEATURE_B]` | `[STATUS]` | `[P0 / P1 / P2]` | |
-| `[FEATURE_C]` | `[STATUS]` | `[P0 / P1 / P2]` | |
+| Item | Status | Notes |
+|------|--------|-------|
+| D1 schema (slug, destination, token) | ✅ | |
+| `POST /api/qr` create | ✅ | |
+| `GET /q/{slug}` redirect | ✅ | |
+| `GET/PUT /api/manage/{slug}/{token}` | ✅ | |
+| Minimal React UI (create + manage) | ✅ | Functional only |
+| Worker integration tests | ✅ | |
 
 **Exit criteria:**
 
-- [ ] `[CRITERION_1]`
-- [ ] `[CRITERION_2]`
+- [x] QR points to our URL, not destination directly
+- [x] Redirect works to destination A
+- [x] Management URL changes destination to B
+- [x] Same QR redirects to B without regeneration
+- [ ] Human physical scan test (owner)
 
 ---
 
-## Phase 2 — Hardening and Scale
+## Milestone 2 — Minimal product 📋
 
-**Goal:** `[e.g. Production readiness, observability, performance]`
+**Goal:** Enough product surface for strangers to understand and try.
 
-| Item | Status | Priority | Notes |
-|------|--------|----------|-------|
-| Error handling and logging polish | `[STATUS]` | | |
-| Test coverage for critical paths | `[STATUS]` | | |
-| `[FEATURE_D]` | `[STATUS]` | | |
-| Deployment automation | `[STATUS]` | | |
+| Item | Status | Notes |
+|------|--------|-------|
+| Free static QR generator (no account) | 📋 | |
+| Simple landing explaining value prop | 📋 | |
+| Basic visual polish (not a design system) | 📋 | |
+| Copy/download flows | 📋 | |
 
----
+**Exit criteria:**
 
-## Phase 3 — Growth
-
-**Goal:** `[DESCRIBE_POST-MVP_DIRECTION]`
-
-| Item | Status | Priority | Notes |
-|------|--------|----------|-------|
-| `[FEATURE_E]` | `[STATUS]` | | |
-| `[FEATURE_F]` | `[STATUS]` | | |
-| `[INTEGRATION_1]` | `[STATUS]` | | |
+- [ ] Someone unfamiliar can create a static QR in < 60 seconds
+- [ ] Value proposition visible without reading docs
 
 ---
 
-## Backlog (Unscheduled)
+## Milestone 3 — Monetization 📋
 
-Ideas and requests not yet committed to a phase:
+**Goal:** Accept one-time payment for a dynamic QR.
 
-| Item | Value | Effort | Notes |
-|------|-------|--------|-------|
-| `[IDEA_1]` | `[High / Medium / Low]` | `[S / M / L]` | |
-| `[IDEA_2]` | `[High / Medium / Low]` | `[S / M / L]` | |
+| Item | Status | Notes |
+|------|--------|-------|
+| Stripe Checkout integration | 📋 | ~€4.90 one-time |
+| Gate dynamic QR creation on payment | 📋 | |
+| Post-payment delivery of QR + management URL | 📋 | |
+
+**Exit criteria:**
+
+- [ ] Test payment completes end-to-end
+- [ ] Paid user receives working dynamic QR + management link
 
 ---
 
-## Non-Goals (This Cycle)
+## Milestone 4 — Production 📋
 
-Explicitly deferred — revisit in a future planning session:
+**Goal:** Deploy on Cloudflare for real users.
 
-- `[NON_GOAL_1]`
-- `[NON_GOAL_2]`
+| Item | Status | Notes |
+|------|--------|-------|
+| Cloudflare D1 provisioning | 📋 | |
+| Worker + static assets deploy | 📋 | |
+| Custom domain (if needed) | 📋 | Evaluate only if required |
+| Basic error monitoring | 📋 | Minimal |
+
+---
+
+## Milestone 5 — Distribution 📋
+
+**Goal:** Put in front of real users and measure revenue.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Launch channel(s) TBD | 📋 | |
+| Measure revenue > €0 | 📋 | Primary KPI |
+| Iterate or kill based on data | 📋 | |
+
+---
+
+## NOT NOW (explicit non-goals)
+
+**Do not build these unless the experiment succeeds and a milestone explicitly adds them:**
+
+- User accounts / login / OAuth
+- Teams / organizations
+- Subscriptions (we sell one-time, not recurring)
+- Advanced analytics dashboards
+- Folders, bulk QR, CSV import
+- Public API
+- Custom domains (unless proven necessary)
+- Mobile app
+- Admin back-office
+- AI features
+- Elaborate design system
+- CI/CD pipelines
+- Multi-layer clean architecture
+- Scan funnels, A/B testing infrastructure
 
 ---
 
@@ -116,12 +140,13 @@ Explicitly deferred — revisit in a future planning session:
 
 | Risk / dependency | Impact | Mitigation |
 |-------------------|--------|------------|
-| `[RISK_1]` | `[High / Medium / Low]` | `[MITIGATION]` |
+| Nobody pays | High | Kill fast; total sunk cost kept low |
+| QR spam/abuse | Medium | Rate limit later if needed |
+| Lost management URL = lost edit access | Medium | Clear UX warning; acceptable for M1 |
 
 ---
 
 ## Review Cadence
 
-- **Weekly:** skim in-progress items, update statuses
-- **Monthly:** reprioritize backlog, adjust phases
-- **After each release:** sync with [CURRENT_STATE.md](CURRENT_STATE.md)
+- After each milestone: update [CURRENT_STATE.md](CURRENT_STATE.md)
+- After any payment attempt: record outcome in CURRENT_STATE

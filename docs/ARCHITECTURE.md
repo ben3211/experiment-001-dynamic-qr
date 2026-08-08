@@ -1,37 +1,34 @@
 # Architecture
 
-> **Template:** Document how the system is designed. Update when structure or major flows change.
-
-**Last updated:** `[YYYY-MM-DD]`  
-**Applies to version:** `[v0.0.0 or commit range]`
+**Last updated:** 2026-08-08  
+**Applies to:** Milestone 1
 
 ---
 
 ## System Overview
 
-<!-- High-level description: what the system does and major components -->
+Minimal dynamic QR service:
 
-`[SYSTEM_OVERVIEW]`
+1. User enters destination URL in React UI
+2. Worker stores `{ slug, destination_url, management_token }` in D1
+3. UI generates QR encoding **`{BASE_URL}/q/{slug}`** (not the destination)
+4. Scan hits Worker → lookup D1 → HTTP 302 redirect to destination
+5. Owner opens **`{FRONTEND_URL}/manage/{slug}/{token}`** → edits destination
+6. Same `/q/{slug}` now redirects to new destination
 
-### Context Diagram
+No accounts. Management token in URL is the credential.
 
 ```
-                    ┌─────────────────┐
-                    │  [EXTERNAL_ACTOR] │
-                    └────────┬────────┘
-                             │
-                    ┌────────▼────────┐
-                    │  [THIS_SYSTEM]  │
-                    └────────┬────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-     ┌────────▼───┐  ┌───────▼──────┐  ┌───▼────────┐
-     │ [DEP_1]    │  │ [DEP_2]      │  │ [DEP_3]    │
-     └────────────┘  └──────────────┘  └────────────┘
+┌──────────┐    create     ┌─────────────┐    store    ┌────────┐
+│  Browser │──────────────▶│ CF Worker   │────────────▶│   D1   │
+│  (React) │◀──────────────│  /api/*     │◀────────────│        │
+└────┬─────┘   slug+urls   └──────┬──────┘   lookup     └────────┘
+     │                            │
+     │ QR encodes                 │ GET /q/{slug}
+     │ /q/{slug}                  ▼
+     │                     302 → destination
+     └──────────────── scan ──────┘
 ```
-
-Replace the diagram above with your actual architecture (Mermaid, ASCII, or linked diagram).
 
 ---
 
@@ -39,144 +36,106 @@ Replace the diagram above with your actual architecture (Mermaid, ASCII, or link
 
 | Goal | Approach |
 |------|----------|
-| `[GOAL_1]` | `[HOW_ARCHITECTURE_SUPPORTS_IT]` |
-| `[GOAL_2]` | `[HOW_ARCHITECTURE_SUPPORTS_IT]` |
+| Fast experiment | Monolith Worker + flat React app, no layers |
+| Editable without reprint | Stable public slug; mutable destination in D1 |
+| No accounts | Long random management token in URL |
+| Low cost | Cloudflare Workers + D1 free tier |
 
 | Constraint | Implication |
 |------------|-------------|
-| `[CONSTRAINT_1 — e.g. must run offline]` | `[DESIGN_CHOICE]` |
-| `[CONSTRAINT_2 — e.g. <100ms p95]` | `[DESIGN_CHOICE]` |
+| Speed-first | No DI, no domain/application/infrastructure split |
+| M1 local dev | Worker :8787, Vite :5173 with proxy |
+| Lost token = lost access | Document clearly; no recovery flow in M1 |
 
 ---
 
-## Layer Model
+## Components
 
-Describe how clean architecture maps to this repo:
+| Component | Location | Responsibility |
+|-----------|----------|----------------|
+| Web UI | `web/src/` | Create QR, show management link, edit destination |
+| Worker API | `worker/src/index.ts` | CRUD-ish API + redirect handler |
+| D1 | `worker/migrations/` | Persist slug → destination + token |
+| QR image | Client (`qrcode` lib) | Render PNG/data URL from redirect URL |
 
-| Layer | Location | Responsibility |
-|-------|----------|----------------|
-| Domain | `[PATH e.g. src/domain/]` | `[ENTITIES, RULES, USE CASES]` |
-| Application | `[PATH]` | `[ORCHESTRATION, PORTS]` |
-| Infrastructure | `[PATH]` | `[DB, HTTP, FILE I/O]` |
-| Presentation | `[PATH]` | `[API, UI, CLI]` |
-
-**Dependency rule:** outer layers depend on inner layers; domain depends on nothing external.
+**Deliberate exception:** We skip clean-architecture layering from `DEVELOPMENT_GUIDELINES.md` until complexity demands it.
 
 ---
 
-## Module Map
+## HTTP Routes
 
-```
-[ROOT]/
-├── [MODULE_A]/     # [PURPOSE]
-├── [MODULE_B]/     # [PURPOSE]
-└── [MODULE_C]/     # [PURPOSE]
-```
+| Method | Path | Auth | Action |
+|--------|------|------|--------|
+| `POST` | `/api/qr` | None | Create dynamic QR |
+| `GET` | `/q/{slug}` | None | 302 redirect to destination |
+| `GET` | `/api/manage/{slug}/{token}` | Token in URL | Read current destination |
+| `PUT` | `/api/manage/{slug}/{token}` | Token in URL | Update destination |
 
-| Module | Purpose | Key types / entry points |
-|--------|---------|--------------------------|
-| `[MODULE_A]` | `[PURPOSE]` | `[FILES OR CLASSES]` |
-| `[MODULE_B]` | `[PURPOSE]` | `[FILES OR CLASSES]` |
+CORS enabled on `/api/*` for local Vite dev.
 
 ---
 
-## Core Flows
+## Core Flow: Create and edit
 
-### Flow 1: `[FLOW_NAME — e.g. User registration]`
-
-1. `[STEP_1 — e.g. HTTP POST /users]`
-2. `[STEP_2 — e.g. Validate payload]`
-3. `[STEP_3 — e.g. Create user via UserService]`
-4. `[STEP_4 — e.g. Persist via UserRepository]`
-5. `[STEP_5 — e.g. Return 201 + user DTO]`
-
-**Error paths:** `[DESCRIBE FAILURE MODES AND HANDLING]`
-
-### Flow 2: `[FLOW_NAME]`
-
-`[DESCRIBE OR LINK TO SEQUENCE DIAGRAM]`
+1. `POST /api/qr` with `{ destinationUrl }`
+2. Worker validates http(s) URL, generates 8-char slug + 64-char hex token
+3. Insert into D1; return `redirectUrl`, `manageUrl`, `slug`
+4. UI renders QR for `redirectUrl`
+5. Owner visits `manageUrl` → React route loads → `GET /api/manage/...`
+6. Owner submits new URL → `PUT /api/manage/...`
+7. Next `GET /q/{slug}` returns 302 to new destination
 
 ---
 
 ## Data Model
 
-<!-- Schema, entities, relationships — link to migrations or ERD if available -->
+**Table: `dynamic_qrs`**
 
-| Entity | Description | Storage |
-|--------|-------------|---------|
-| `[ENTITY_1]` | `[DESCRIPTION]` | `[TABLE / COLLECTION / FILE]` |
-| `[ENTITY_2]` | `[DESCRIPTION]` | `[TABLE / COLLECTION / FILE]` |
+| Column | Type | Description |
+|--------|------|-------------|
+| `slug` | TEXT PK | Public identifier in redirect URL |
+| `destination_url` | TEXT | Current redirect target |
+| `management_token` | TEXT | Secret; required to edit |
+| `created_at` | TEXT | ISO timestamp |
 
-**Relationships:** `[DESCRIBE OR EMBED DIAGRAM]`
-
----
-
-## External Integrations
-
-| Service | Purpose | Auth | Failure handling |
-|---------|---------|------|------------------|
-| `[SERVICE_1]` | `[WHY]` | `[API key / OAuth / etc.]` | `[RETRY / CIRCUIT BREAKER / FAIL FAST]` |
-| `[SERVICE_2]` | `[WHY]` | | |
+Index on `(slug, management_token)` for management lookups.
 
 ---
 
 ## Configuration
 
-| Source | Contents | Loaded when |
-|--------|----------|-------------|
-| Environment variables | `[LIST OR REF .env.example]` | Startup |
-| Config files | `[PATHS]` | `[WHEN]` |
+| Variable | Default (local) | Purpose |
+|----------|-----------------|---------|
+| `BASE_URL` | `http://localhost:8787` | Origin for `/q/{slug}` in API responses |
+| `FRONTEND_URL` | `http://localhost:5173` | Origin for management page links |
 
-See [PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md) for required variables.
-
----
-
-## Cross-Cutting Concerns
-
-| Concern | Implementation |
-|---------|----------------|
-| Logging | `[LIBRARY / FORMAT / LEVELS]` |
-| Authentication | `[MECHANISM]` |
-| Authorization | `[MODEL — RBAC, ABAC, etc.]` |
-| Validation | `[WHERE AND HOW]` |
-| Error handling | `[GLOBAL HANDLER / PATTERN]` |
-| Caching | `[IF ANY]` |
-
----
-
-## Deployment Topology
-
-```
-[DESCRIBE: single container, k8s, serverless, monolith, etc.]
-```
-
-| Environment | URL / target | Notes |
-|-------------|--------------|-------|
-| Local | `[URL]` | |
-| Staging | `[URL]` | |
-| Production | `[URL]` | |
+Set in `worker/wrangler.toml` `[vars]`. Override per environment on deploy.
 
 ---
 
 ## Security Notes
 
-- `[TRUST_BOUNDARIES]`
-- `[SECRET_HANDLING]`
-- `[INPUT_VALIDATION_STRATEGY]`
-- `[AUDIT OR COMPLIANCE REQUIREMENTS IF ANY]`
+- **Management token** = 32 random bytes (hex). URL possession = edit rights.
+- **No enumeration protection on slug** — acceptable for experiment; slug is unguessable enough at 8 chars from 36-char alphabet (~2.8T combinations).
+- **Create endpoint unauthenticated** — acceptable for M1; rate-limit later if abused.
+- **URL validation** — only `http:` and `https:` destinations accepted.
 
 ---
 
-## Performance and Scaling
+## Deployment Topology (future — Milestone 4)
 
-| Bottleneck | Current approach | Future option |
-|------------|------------------|---------------|
-| `[AREA]` | `[APPROACH]` | `[IF NEEDED]` |
+```
+User → Cloudflare Worker (API + /q redirects)
+     → Cloudflare D1
+     → Static assets (Vite build) served from Worker or Pages
+```
+
+Not deployed yet.
 
 ---
 
 ## Related Documents
 
-- [docs/DECISIONS.md](DECISIONS.md) — why specific choices were made
-- [DEVELOPMENT_GUIDELINES.md](../DEVELOPMENT_GUIDELINES.md) — engineering standards
-- [CURRENT_STATE.md](../CURRENT_STATE.md) — live status
+- [docs/DECISIONS.md](DECISIONS.md)
+- [PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)
+- [CURRENT_STATE.md](../CURRENT_STATE.md)
