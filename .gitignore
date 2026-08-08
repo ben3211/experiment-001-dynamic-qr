@@ -1,0 +1,96 @@
+# =============================================================================
+# AI Project Template — safe defaults for any stack
+# Add project-specific patterns at the bottom.
+# =============================================================================
+
+# --- Secrets and credentials (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt.local
+credentials.json
+credentials.yaml
+secrets/
+.secrets/
+**/secrets.json
+**/service-account*.json
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# --- Editors and IDEs ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*~
+
+# Cursor: ignore local state, keep project rules tracked
+.cursor/*
+!.cursor/rules/
+
+# --- Dependencies ---
+node_modules/
+vendor/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.Python
+
+# --- Build and output ---
+dist/
+build/
+out/
+target/
+*.o
+*.exe
+*.dll
+.next/
+.nuxt/
+.turbo/
+
+# --- Logs and temp ---
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.pid
+
+# --- Test and coverage ---
+coverage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+test-results/
+playwright-report/
+
+# --- Local databases ---
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+
+# --- Infrastructure local state ---
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.pulumi/
+cdk.out/
+
+# --- Docker local overrides ---
+docker-compose.override.yml
+
+# --- Project-specific (add below) ---

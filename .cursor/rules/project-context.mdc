@@ -1,0 +1,32 @@
+---
+description: Read core project docs before significant work
+alwaysApply: true
+---
+
+# Read Project Docs First
+
+Before planning, implementing, or refactoring non-trivial work, read these files in order:
+
+1. **DEVELOPMENT_GUIDELINES.md** — engineering standards
+2. **PROJECT_CONTEXT.md** — purpose, stack, commands, conventions
+3. **CURRENT_STATE.md** — what works, in progress, known issues, blockers
+4. **ROADMAP.md** — priorities and planned phases
+
+Also read when relevant:
+
+- **docs/ARCHITECTURE.md** — structure, modules, data flows
+- **docs/DECISIONS.md** — past architectural decisions (ADRs)
+
+## When to read
+
+- New session or unfamiliar part of the codebase
+- Feature work, non-trivial bug fixes, refactors, dependency changes
+
+## After significant work
+
+- Update **CURRENT_STATE.md** if status or issues changed
+- Update **docs/ARCHITECTURE.md** if structure or flows changed
+- Add an ADR to **docs/DECISIONS.md** for meaningful technical decisions
+- Update **ROADMAP.md** if priorities shifted
+
+Follow **DEVELOPMENT_GUIDELINES.md** unless **PROJECT_CONTEXT.md** or an ADR overrides. Prefer minimal, focused changes.
