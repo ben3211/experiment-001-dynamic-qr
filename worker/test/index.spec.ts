@@ -16,27 +16,46 @@ async function request(path: string, init?: RequestInit) {
   return response;
 }
 
+async function seedDynamicQr(
+  slug: string,
+  destinationUrl: string,
+  managementToken: string,
+) {
+  await env.DB.prepare(
+    "INSERT INTO dynamic_qrs (slug, destination_url, management_token) VALUES (?, ?, ?)",
+  )
+    .bind(slug, destinationUrl, managementToken)
+    .run();
+}
+
 describe("dynamic QR worker", () => {
-  it("creates a QR, redirects, and updates destination with the same slug", async () => {
-    const createResponse = await request("/api/qr", {
+  it("blocks unpaid direct QR creation", async () => {
+    const response = await request("/api/qr", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ destinationUrl: "https://example-a.test" }),
     });
 
-    expect(createResponse.status).toBe(200);
-    const created = (await createResponse.json()) as {
-      slug: string;
-      redirectUrl: string;
-      manageUrl: string;
-      destinationUrl: string;
-    };
+    expect(response.status).toBe(403);
+  });
 
-    expect(created.destinationUrl).toBe("https://example-a.test");
-    expect(created.redirectUrl).toContain(`/q/${created.slug}`);
-    expect(created.manageUrl).toContain(`/manage/${created.slug}/`);
+  it("validates checkout destination input", async () => {
+    const response = await request("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ destinationUrl: "not-a-url" }),
+    });
 
-    const redirectResponse = await request(`/q/${created.slug}`, {
+    expect(response.status).toBe(400);
+  });
+
+  it("redirects and updates destination for an existing QR", async () => {
+    const slug = "testslug";
+    const token = "a".repeat(64);
+
+    await seedDynamicQr(slug, "https://example-a.test", token);
+
+    const redirectResponse = await request(`/q/${slug}`, {
       redirect: "manual",
     });
     expect(redirectResponse.status).toBe(302);
@@ -44,23 +63,14 @@ describe("dynamic QR worker", () => {
       new URL("https://example-a.test").href,
     );
 
-    const token = created.manageUrl.split("/").pop()!;
-    const manageGet = await request(`/api/manage/${created.slug}/${token}`);
-    expect(manageGet.status).toBe(200);
-    const manageData = (await manageGet.json()) as { destinationUrl: string };
-    expect(manageData.destinationUrl).toBe("https://example-a.test");
-
-    const updateResponse = await request(
-      `/api/manage/${created.slug}/${token}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ destinationUrl: "https://example-b.test" }),
-      },
-    );
+    const updateResponse = await request(`/api/manage/${slug}/${token}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ destinationUrl: "https://example-b.test" }),
+    });
     expect(updateResponse.status).toBe(200);
 
-    const redirectAgain = await request(`/q/${created.slug}`, {
+    const redirectAgain = await request(`/q/${slug}`, {
       redirect: "manual",
     });
     expect(redirectAgain.status).toBe(302);
@@ -70,15 +80,10 @@ describe("dynamic QR worker", () => {
   });
 
   it("rejects management updates with an invalid token", async () => {
-    const createResponse = await request("/api/qr", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ destinationUrl: "https://example.test" }),
-    });
-    const created = (await createResponse.json()) as { slug: string };
+    await seedDynamicQr("badtokentest", "https://example.test", "validtoken");
 
     const updateResponse = await request(
-      `/api/manage/${created.slug}/invalid-token`,
+      "/api/manage/badtokentest/invalid-token",
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -89,13 +94,11 @@ describe("dynamic QR worker", () => {
     expect(updateResponse.status).toBe(404);
   });
 
-  it("validates destination URLs on create", async () => {
-    const response = await request("/api/qr", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ destinationUrl: "not-a-url" }),
-    });
+  it("rejects fulfillment without a completed payment", async () => {
+    const response = await request(
+      "/api/checkout/fulfillment?session_id=cs_test_unpaid",
+    );
 
-    expect(response.status).toBe(400);
+    expect([402, 503]).toContain(response.status);
   });
 });

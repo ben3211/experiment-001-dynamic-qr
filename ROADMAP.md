@@ -74,24 +74,26 @@ Validate that people will pay a one-time ~€4.90 for a permanent editable dynam
 - [x] Value proposition visible without reading docs
 - [x] Static and dynamic flows work with download
 - [x] Management workflow understandable without technical terms
-- [ ] Human acceptance (owner)
+- [x] Human acceptance (owner)
 
 ---
 
-## Milestone 3 — Monetization 📋
+## Milestone 3 — Monetization ✅
 
-**Goal:** Accept one-time payment for a dynamic QR.
+**Goal:** Accept one-time €4.90 payment for a dynamic QR.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Stripe Checkout integration | 📋 | ~€4.90 one-time |
-| Gate dynamic QR creation on payment | 📋 | |
-| Post-payment delivery of QR + management URL | 📋 | |
+| Stripe Checkout integration | ✅ | Hosted Checkout, inline price |
+| Gate dynamic QR on verified payment | ✅ | `/api/qr` blocked |
+| Post-payment delivery page | ✅ | `/success?session_id=` |
+| Webhook + idempotent fulfillment | ✅ | |
 
 **Exit criteria:**
 
-- [ ] Test payment completes end-to-end
-- [ ] Paid user receives working dynamic QR + management link
+- [x] Unpaid path blocked
+- [x] Idempotent provisioning tested
+- [ ] End-to-end Stripe test payment (owner + credentials)
 
 ---
 

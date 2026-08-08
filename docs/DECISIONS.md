@@ -10,6 +10,7 @@
 | ADR-002 | URL token auth instead of accounts | Accepted | 2026-08-08 |
 | ADR-003 | Skip clean-architecture layering for M1 | Accepted | 2026-08-08 |
 | ADR-004 | Client-side QR generation | Accepted | 2026-08-08 |
+| ADR-005 | Stripe Checkout + webhook fulfillment | Accepted | 2026-08-08 |
 
 ---
 
@@ -121,6 +122,30 @@ Use the `qrcode` npm package in the browser. Encode the **redirect URL** returne
 **Positive:** Worker stays thin; QR updates automatically if `redirectUrl` changes.
 
 **Negative:** Bundle size (~85KB gzip) acceptable for now.
+
+---
+
+## ADR-005: Stripe Checkout + webhook fulfillment
+
+**Status:** Accepted  
+**Date:** 2026-08-08  
+**Tags:** payments, security
+
+### Context
+
+Milestone 3 must accept real one-time payments. Unpaid direct QR creation (M1/M2) is no longer acceptable.
+
+### Decision
+
+Use **Stripe Checkout** (hosted) with inline `price_data` (€4.90 EUR), webhook provisioning, and a fulfillment endpoint that verifies payment via Stripe API. Block `POST /api/qr`.
+
+Idempotency via conditional update on `checkout_orders.dynamic_qr_slug`.
+
+### Consequences
+
+**Positive:** Server-verified payments; no custom card UI; refresh-safe delivery.
+
+**Negative:** Requires Stripe test keys and `stripe listen` locally.
 
 ---
 

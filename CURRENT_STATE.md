@@ -2,16 +2,16 @@
 
 **Last updated:** 2026-08-08  
 **Last verified by:** Agent  
-**Version / tag:** Milestone 2 (local)  
-**Environment:** Local dev verified; not deployed to Cloudflare production
+**Version / tag:** Milestone 3 (local, Stripe test mode required for E2E)  
+**Environment:** Local dev; payment flow implemented; end-to-end Stripe test requires your credentials
 
 ---
 
 ## Summary
 
-Milestone 1 was manually accepted. Milestone 2 is complete locally: a minimal product UI with static (free) and dynamic (€4.90 one-time, payment not live) QR flows, clear user-facing language, PNG download, and an improved management experience.
+Milestones 1–2 accepted. Milestone 3 adds Stripe Checkout (€4.90 one-time) for dynamic QR creation. Direct unpaid QR creation is blocked. Static QR remains free and client-side.
 
-Backend architecture unchanged from Milestone 1.
+Payment verification is server-side via Stripe API + webhook. QR provisioning is idempotent per checkout session.
 
 ---
 
@@ -19,16 +19,15 @@ Backend architecture unchanged from Milestone 1.
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Product landing + value proposition | ✅ Working | Clear headline and static/dynamic picker |
-| Static QR (free, client-side) | ✅ Working | No backend; direct destination encoding |
-| Dynamic QR create + result UX | ✅ Working | Three concepts clearly separated |
-| QR PNG download | ✅ Working | Static and dynamic |
-| Private management page | ✅ Working | QR shown; save confirmation; no reprint messaging |
-| Copy management link | ✅ Working | Clipboard button on create result |
-| Public redirect | ✅ Working | Same QR resolves to updated destination |
-| Worker tests | ✅ Working | 3/3 pass (unchanged backend) |
-| Web production build | ✅ Working | |
-| Browser UI verification | ✅ Working | Create, manage, static flows tested |
+| Static QR (free) | ✅ Working | Unchanged; no backend |
+| Stripe Checkout start | ✅ Implemented | `POST /api/checkout` |
+| Unpaid create blocked | ✅ Working | `POST /api/qr` → 403 |
+| Webhook handler | ✅ Implemented | `POST /api/stripe/webhook` |
+| Post-payment delivery | ✅ Implemented | `/success?session_id=…` |
+| Idempotent fulfillment | ✅ Tested | One QR per checkout session |
+| Redirect + manage (paid QRs) | ✅ Working | Unchanged M1 mechanism |
+| Worker tests | ✅ Working | 6/6 pass |
+| Web build | ✅ Working | |
 
 ---
 
@@ -36,7 +35,7 @@ Backend architecture unchanged from Milestone 1.
 
 | Item | Owner | Branch / PR | Notes |
 |------|-------|-------------|-------|
-| — | — | — | Milestone 3 not started |
+| — | — | — | Milestone 4 not started |
 
 ---
 
@@ -44,17 +43,7 @@ Backend architecture unchanged from Milestone 1.
 
 | ID | Severity | Description | Workaround | Tracking |
 |----|----------|-------------|------------|----------|
-| — | — | None blocking M2 | — | — |
-
----
-
-## Technical Debt
-
-| Item | Impact | Suggested action |
-|------|--------|------------------|
-| Dynamic QR free during M2 testing | Low | Gate behind Stripe in M3 |
-| Worker and web on separate origins locally | Low | Unify on deploy (M4) |
-| D1 database ID is placeholder | Medium | Real D1 before production |
+| Stripe keys required locally | Expected | Checkout returns 503 without `.dev.vars` | Add test keys (see `.env.example`) | M3 setup |
 
 ---
 
@@ -62,17 +51,9 @@ Backend architecture unchanged from Milestone 1.
 
 | Date | Change | Author |
 |------|--------|--------|
-| 2026-08-08 | Milestone 2: product UI, static QR, download, UX polish | Agent |
-| 2026-08-08 | Milestone 1 accepted (manual) | Owner |
-| 2026-08-08 | Milestone 1: Worker + D1 + React UI + tests | Agent |
-
----
-
-## Blockers
-
-| Blocker | Impact | Needed to unblock |
-|---------|--------|-------------------|
-| Cloudflare deploy + Stripe | Blocks real customers | M3 + M4 |
+| 2026-08-08 | Milestone 3: Stripe Checkout, secure fulfillment, success page | Agent |
+| 2026-08-08 | Milestone 2 accepted | Owner |
+| 2026-08-08 | Milestone 1 accepted | Owner |
 
 ---
 
@@ -81,15 +62,13 @@ Backend architecture unchanged from Milestone 1.
 | Check | Status | Last run |
 |-------|--------|----------|
 | Web build | ✅ | 2026-08-08 |
-| Worker tests | ✅ (3/3) | 2026-08-08 |
-| Browser UI (create/manage/static) | ✅ | 2026-08-08 |
-| Dynamic redirect after manage save | ✅ | 2026-08-08 |
-| PNG download click | ➖ | Not auto-verified (browser download) |
-| Mobile layout on real device | ➖ | CSS responsive; human check recommended |
+| Worker tests (6) | ✅ | 2026-08-08 |
+| Full Stripe E2E (real test payment) | ➖ | Requires your Stripe test keys + webhook forwarding |
 
 ---
 
 ## Next Steps
 
-1. **Human acceptance test** for Milestone 2
-2. **Milestone 3** — Stripe one-time payment for dynamic QR
+1. **Configure Stripe test credentials** (human — see completion report)
+2. **Run end-to-end payment acceptance test**
+3. **Milestone 4** — production deployment (not started)

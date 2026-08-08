@@ -1,9 +1,18 @@
 import {
+  createPendingOrder,
+  fulfillCheckoutOrder,
+  markOrderPaid,
+} from "./fulfillment";
+import {
+  createCheckoutSession,
+  getStripe,
+  retrievePaidCheckoutSession,
+  verifyWebhookEvent,
+} from "./stripe-client";
+import {
   errorResponse,
   isValidHttpUrl,
   jsonResponse,
-  randomSlug,
-  randomToken,
   withCors,
 } from "./utils";
 
@@ -11,6 +20,8 @@ export interface Env {
   DB: D1Database;
   BASE_URL: string;
   FRONTEND_URL: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
 }
 
 interface DynamicQrRow {
@@ -29,7 +40,25 @@ function baseUrl(request: Request, env: Env): string {
   return `${url.protocol}//${url.host}`;
 }
 
-async function createDynamicQr(
+function frontendUrl(env: Env): string {
+  return (env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+}
+
+function envUrls(request: Request, env: Env) {
+  return {
+    apiOrigin: baseUrl(request, env),
+    frontendOrigin: frontendUrl(env),
+  };
+}
+
+function requireStripe(env: Env): Response | null {
+  if (!env.STRIPE_SECRET_KEY) {
+    return errorResponse("Payment is not configured", 503);
+  }
+  return null;
+}
+
+async function startCheckout(
   request: Request,
   env: Env,
 ): Promise<Response> {
@@ -45,23 +74,116 @@ async function createDynamicQr(
     return errorResponse("destinationUrl must be a valid http(s) URL", 400);
   }
 
-  const slug = randomSlug();
-  const managementToken = randomToken();
-  const apiOrigin = baseUrl(request, env);
-  const frontendOrigin = (env.FRONTEND_URL || apiOrigin).replace(/\/$/, "");
+  const configError = requireStripe(env);
+  if (configError) {
+    return configError;
+  }
 
-  await env.DB.prepare(
-    "INSERT INTO dynamic_qrs (slug, destination_url, management_token) VALUES (?, ?, ?)",
-  )
-    .bind(slug, destinationUrl, managementToken)
-    .run();
+  const stripe = getStripe(env.STRIPE_SECRET_KEY!);
+  const frontendOrigin = frontendUrl(env);
 
-  return jsonResponse({
-    slug,
+  const session = await createCheckoutSession(stripe, {
     destinationUrl,
-    redirectUrl: `${apiOrigin}/q/${slug}`,
-    manageUrl: `${frontendOrigin}/manage/${slug}/${managementToken}`,
+    successUrl: `${frontendOrigin}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${frontendOrigin}/?cancelled=1`,
   });
+
+  await createPendingOrder(env.DB, session.id, destinationUrl);
+
+  if (!session.url) {
+    return errorResponse("Could not start checkout", 500);
+  }
+
+  return jsonResponse({ checkoutUrl: session.url });
+}
+
+async function getCheckoutFulfillment(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const configError = requireStripe(env);
+  if (configError) {
+    return configError;
+  }
+
+  const sessionId = new URL(request.url).searchParams.get("session_id")?.trim();
+  if (!sessionId) {
+    return errorResponse("session_id is required", 400);
+  }
+
+  const stripe = getStripe(env.STRIPE_SECRET_KEY!);
+  const session = await retrievePaidCheckoutSession(stripe, sessionId);
+
+  if (!session) {
+    return errorResponse("Payment not completed", 402);
+  }
+
+  const destinationUrl = session.metadata?.destination_url?.trim();
+  if (!destinationUrl || !isValidHttpUrl(destinationUrl)) {
+    return errorResponse("Checkout session is invalid", 400);
+  }
+
+  await markOrderPaid(env.DB, session.id);
+  const result = await fulfillCheckoutOrder(
+    env.DB,
+    session.id,
+    destinationUrl,
+    envUrls(request, env),
+  );
+
+  return jsonResponse(result);
+}
+
+async function handleStripeWebhook(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) {
+    return errorResponse("Webhook is not configured", 503);
+  }
+
+  const signature = request.headers.get("stripe-signature");
+  if (!signature) {
+    return errorResponse("Missing Stripe signature", 400);
+  }
+
+  const payload = await request.text();
+  const stripe = getStripe(env.STRIPE_SECRET_KEY);
+
+  let event;
+  try {
+    event = verifyWebhookEvent(
+      stripe,
+      payload,
+      signature,
+      env.STRIPE_WEBHOOK_SECRET,
+    );
+  } catch {
+    return errorResponse("Invalid Stripe signature", 400);
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as {
+      id: string;
+      payment_status: string;
+      metadata?: { destination_url?: string };
+    };
+
+    if (session.payment_status === "paid") {
+      const destinationUrl = session.metadata?.destination_url?.trim();
+      if (destinationUrl && isValidHttpUrl(destinationUrl)) {
+        await markOrderPaid(env.DB, session.id);
+        await fulfillCheckoutOrder(
+          env.DB,
+          session.id,
+          destinationUrl,
+          envUrls(request, env),
+        );
+      }
+    }
+  }
+
+  return jsonResponse({ received: true });
 }
 
 async function redirectQr(slug: string, env: Env): Promise<Response> {
@@ -94,12 +216,12 @@ async function getManagedQr(
     return errorResponse("Not found or invalid management token", 404);
   }
 
-  const apiOrigin = baseUrl(request, env);
+  const urls = envUrls(request, env);
 
   return jsonResponse({
     slug: row.slug,
     destinationUrl: row.destination_url,
-    redirectUrl: `${apiOrigin}/q/${row.slug}`,
+    redirectUrl: `${urls.apiOrigin}/q/${row.slug}`,
     createdAt: row.created_at,
   });
 }
@@ -147,7 +269,22 @@ export default {
     let response: Response;
 
     if (request.method === "POST" && url.pathname === "/api/qr") {
-      response = await createDynamicQr(request, env);
+      response = errorResponse(
+        "Direct QR creation is disabled. Complete checkout to create a dynamic QR.",
+        403,
+      );
+    } else if (request.method === "POST" && url.pathname === "/api/checkout") {
+      response = await startCheckout(request, env);
+    } else if (
+      request.method === "GET" &&
+      url.pathname === "/api/checkout/fulfillment"
+    ) {
+      response = await getCheckoutFulfillment(request, env);
+    } else if (
+      request.method === "POST" &&
+      url.pathname === "/api/stripe/webhook"
+    ) {
+      response = await handleStripeWebhook(request, env);
     } else if (request.method === "GET" && url.pathname.startsWith("/q/")) {
       const slug = url.pathname.slice("/q/".length);
       if (!slug || slug.includes("/")) {

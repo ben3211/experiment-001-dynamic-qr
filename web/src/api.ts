@@ -1,4 +1,4 @@
-export interface CreateQrResponse {
+export interface FulfillmentResponse {
   slug: string;
   destinationUrl: string;
   redirectUrl: string;
@@ -22,15 +22,24 @@ async function parseJson<T>(response: Response): Promise<T> {
   return body;
 }
 
-export async function createDynamicQr(
+export async function startCheckout(
   destinationUrl: string,
-): Promise<CreateQrResponse> {
-  const response = await fetch(`${API_BASE}/api/qr`, {
+): Promise<{ checkoutUrl: string }> {
+  const response = await fetch(`${API_BASE}/api/checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ destinationUrl }),
   });
-  return parseJson<CreateQrResponse>(response);
+  return parseJson<{ checkoutUrl: string }>(response);
+}
+
+export async function getCheckoutFulfillment(
+  sessionId: string,
+): Promise<FulfillmentResponse> {
+  const response = await fetch(
+    `${API_BASE}/api/checkout/fulfillment?session_id=${encodeURIComponent(sessionId)}`,
+  );
+  return parseJson<FulfillmentResponse>(response);
 }
 
 export async function getManagedQr(

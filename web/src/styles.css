@@ -282,6 +282,12 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.form-note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
 .qr-display {
   display: flex;
   flex-direction: column;

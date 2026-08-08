@@ -27,8 +27,8 @@ export function ProductPicker({ mode, onChange }: ProductPickerProps) {
         onClick={() => onChange("dynamic")}
       >
         <span className="product-name">Dynamic QR</span>
-        <span className="product-price">€4.90 one-time</span>
-        <span className="product-tagline">Change destination later</span>
+        <span className="product-price">€4.90 · One-time payment</span>
+        <span className="product-tagline">Change destination anytime</span>
       </button>
     </div>
   );

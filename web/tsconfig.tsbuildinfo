@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/managepage.tsx","./src/api.ts","./src/main.tsx","./src/vite-env.d.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/managepage.tsx","./src/successpage.tsx","./src/api.ts","./src/main.tsx","./src/qr-utils.ts","./src/vite-env.d.ts","./src/components/copybutton.tsx","./src/components/dynamicqrform.tsx","./src/components/dynamicqrresult.tsx","./src/components/layout.tsx","./src/components/productpicker.tsx","./src/components/qrdisplay.tsx","./src/components/staticqrform.tsx"],"version":"5.9.3"}

@@ -8,6 +8,9 @@
     "test": "vitest run",
     "db:migrate:local": "wrangler d1 migrations apply dynamic-qr-db --local"
   },
+  "dependencies": {
+    "stripe": "^17.7.0"
+  },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.19",
     "@cloudflare/workers-types": "^4.20250204.0",

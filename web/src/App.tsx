@@ -10,10 +10,10 @@ export function App() {
   return (
     <Layout>
       <section className="hero">
-        <h1>Create a QR code whose destination you can change later</h1>
+        <h1>Create a QR code you can update anytime</h1>
         <p className="hero-subtitle">
-          Print once, update anytime. No monthly subscription — just a simple
-          one-time QR that keeps working when your link changes.
+          Change where your QR sends people without replacing or reprinting it.
+          No subscription.
         </p>
       </section>
 

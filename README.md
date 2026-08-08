@@ -10,9 +10,17 @@ Fast business experiment: prove people will pay a one-time fee (~€4.90) for a 
 
 ## Current status
 
-**Milestone 2 complete** — minimal product UI with static (free) and dynamic QR flows.
+**Milestone 3 complete** — Stripe Checkout for dynamic QR (€4.90 one-time). Static QR remains free.
 
-Open http://localhost:5173 (requires `npm run dev:web` + `npm run dev:worker`).
+Open http://localhost:5173 (requires `npm run dev:web` + `npm run dev:worker` + Stripe keys in `worker/.dev.vars`).
+
+### Stripe local setup
+
+1. Create `worker/.dev.vars` (see `.env.example`) with `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
+2. Terminal 1: `npm run dev:worker`
+3. Terminal 2: `stripe listen --forward-to localhost:8787/api/stripe/webhook`
+4. Terminal 3: `npm run dev:web`
+5. Use Stripe test card `4242 4242 4242 4242`
 
 ---
 
