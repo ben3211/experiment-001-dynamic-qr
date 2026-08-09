@@ -82,19 +82,26 @@ async function startCheckout(
   const stripe = getStripe(env.STRIPE_SECRET_KEY!);
   const frontendOrigin = frontendUrl(env);
 
-  const session = await createCheckoutSession(stripe, {
-    destinationUrl,
-    successUrl: `${frontendOrigin}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancelUrl: `${frontendOrigin}/?cancelled=1`,
-  });
+  try {
+    const session = await createCheckoutSession(stripe, {
+      destinationUrl,
+      successUrl: `${frontendOrigin}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${frontendOrigin}/?cancelled=1`,
+    });
 
-  await createPendingOrder(env.DB, session.id, destinationUrl);
+    await createPendingOrder(env.DB, session.id, destinationUrl);
 
-  if (!session.url) {
-    return errorResponse("Could not start checkout", 500);
+    if (!session.url) {
+      return errorResponse("Could not start checkout", 500);
+    }
+
+    return jsonResponse({ checkoutUrl: session.url });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Could not start checkout";
+    console.error("Checkout session creation failed:", message);
+    return errorResponse("Could not start checkout. Please try again.", 502);
   }
-
-  return jsonResponse({ checkoutUrl: session.url });
 }
 
 async function getCheckoutFulfillment(
@@ -112,7 +119,13 @@ async function getCheckoutFulfillment(
   }
 
   const stripe = getStripe(env.STRIPE_SECRET_KEY!);
-  const session = await retrievePaidCheckoutSession(stripe, sessionId);
+
+  let session;
+  try {
+    session = await retrievePaidCheckoutSession(stripe, sessionId);
+  } catch {
+    return errorResponse("Payment not completed", 402);
+  }
 
   if (!session) {
     return errorResponse("Payment not completed", 402);

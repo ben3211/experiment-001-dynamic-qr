@@ -15,6 +15,13 @@ export interface ManageQrResponse {
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
 async function parseJson<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      `Unexpected response from server (${response.status}). Is the Worker running on port 8787?`,
+    );
+  }
+
   const body = (await response.json()) as T & { error?: string };
   if (!response.ok) {
     throw new Error(body.error ?? `Request failed (${response.status})`);
