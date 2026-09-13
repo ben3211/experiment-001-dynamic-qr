@@ -6,7 +6,7 @@
 |-------|-------|
 | **Project name** | Experiment 001 — Dynamic QR |
 | **One-line description** | Permanent dynamic QR codes without an expensive subscription |
-| **Status** | ACTIVE (Milestone 1 complete) |
+| **Status** | **STOPPED / KILLED** (2026-09-13, after Milestone 3) |
 | **Primary language(s)** | TypeScript |
 | **Repository** | https://github.com/ben3211/experiment-001-dynamic-qr |
 
@@ -20,7 +20,15 @@ Business experiment, not a long-term product (yet).
 
 **Positioning hypothesis:** Permanent dynamic QR codes without an expensive subscription.
 
-**Pricing hypothesis (not implemented yet):** ~€4.90 one-time per permanent dynamic QR.
+**Pricing hypothesis:** ~€4.90 one-time per permanent dynamic QR (implemented in Milestone 3; Stripe Sandbox only).
+
+## Experiment closure (2026-09-13)
+
+- Milestones 1–3 **completed**; Milestones 4–5 **not pursued**.
+- Core dynamic QR, product UI, and Stripe Sandbox checkout → provisioning → management **worked**.
+- **No production deployment**, no domain, **no real customer payments**.
+- **Stop reason:** commoditized market; free dynamic/editable QR from many competitors; €4.90 generic offer not differentiated enough.
+- **Lesson:** validate competition, pricing, and distribution **before** deep build (especially payment infra) on future experiments.
 
 ## Target Users
 

@@ -1,49 +1,65 @@
 # Current State
 
-**Last updated:** 2026-08-08  
-**Last verified by:** Agent  
-**Version / tag:** Milestone 3 (local, Stripe test mode required for E2E)  
-**Environment:** Local dev; payment flow implemented; end-to-end Stripe test requires your credentials
+**Last updated:** 2026-09-13  
+**Last verified by:** Owner / Agent  
+**Status:** **STOPPED / KILLED**  
+**Environment:** Local dev only; never deployed to production
 
 ---
 
 ## Summary
 
-Milestones 1–2 accepted. Milestone 3 adds Stripe Checkout (€4.90 one-time) for dynamic QR creation. Direct unpaid QR creation is blocked. Static QR remains free and client-side.
+Experiment 001 is **closed** after Milestone 3. Milestones 1–3 were successfully completed: the core dynamic QR mechanism worked, the minimal product UI shipped, and the Stripe Sandbox payment → provisioning → management flow worked end-to-end locally.
 
-Payment verification is server-side via Stripe API + webhook. QR provisioning is idempotent per checkout session.
+Production deployment (Milestone 4) was **intentionally not pursued**. No domain was purchased and **no real customer payments** were accepted (Stripe test mode only).
+
+**Why stopped:** The generic dynamic-QR market is highly commoditized. Multiple competitors offer free dynamic/editable QR codes, so a €4.90 one-time generic offer was **insufficiently differentiated**.
+
+**Main lesson:** Technical execution was fast and successful, but **market attractiveness should be validated earlier** — before completing several implementation milestones (including payment infrastructure).
 
 ---
 
-## What Works
+## Experiment outcome
+
+| Item | Result |
+|------|--------|
+| Milestone 1 — Core mechanism | ✅ Completed & accepted |
+| Milestone 2 — Minimal product | ✅ Completed & accepted |
+| Milestone 3 — Monetization (Stripe) | ✅ Completed (Sandbox E2E verified) |
+| Milestone 4 — Production | ❌ Not pursued |
+| Milestone 5 — Distribution | ❌ Not pursued |
+| Revenue > €0 (real money) | ❌ Not attempted (no production launch) |
+| Repository / code | ✅ Preserved as reference |
+
+---
+
+## What Works (historical — local dev)
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Static QR (free) | ✅ Working | Unchanged; no backend |
-| Stripe Checkout start | ✅ Implemented | `POST /api/checkout` |
-| Unpaid create blocked | ✅ Working | `POST /api/qr` → 403 |
-| Webhook handler | ✅ Implemented | `POST /api/stripe/webhook` |
-| Post-payment delivery | ✅ Implemented | `/success?session_id=…` |
-| Idempotent fulfillment | ✅ Tested | One QR per checkout session |
-| Redirect + manage (paid QRs) | ✅ Working | Unchanged M1 mechanism |
-| Worker tests | ✅ Working | 6/6 pass |
-| Web build | ✅ Working | |
+| Dynamic QR redirect + edit | ✅ | Same QR, new destination |
+| Static QR (free, client-side) | ✅ | No backend |
+| Stripe Checkout + fulfillment | ✅ | Sandbox; unpaid path blocked |
+| Management via private URL | ✅ | No accounts |
+| Worker tests | ✅ | 6/6 at last run |
+
+This codebase remains runnable locally for reference; it is not an active product.
 
 ---
 
 ## In Progress
 
-| Item | Owner | Branch / PR | Notes |
-|------|-------|-------------|-------|
-| — | — | — | Milestone 4 not started |
+None. Experiment closed.
 
 ---
 
-## Known Issues
+## Lessons learned
 
-| ID | Severity | Description | Workaround | Tracking |
-|----|----------|-------------|------------|----------|
-| Stripe keys required locally | Expected | Checkout returns 503 without `.dev.vars` | Add test keys (see `.env.example`) | M3 setup |
+1. **Cursor can autonomously build a complete small product** — from repository setup through Stripe integration — with minimal manual file editing.
+2. **ChatGPT → Cursor workflow worked well** and avoided manual code-copying between tools.
+3. **A working product is not enough.** Competitive research should happen **before** deep implementation, not after Milestone 3.
+4. **Existing demand ≠ attractive entry opportunity.** Many players already offer free dynamic/editable QR; subscription fatigue alone did not justify a weakly differentiated one-time price.
+5. **For future experiments:** validate **competition, pricing, and distribution** early — ideally **before** implementing payment infrastructure where possible.
 
 ---
 
@@ -51,24 +67,15 @@ Payment verification is server-side via Stripe API + webhook. QR provisioning is
 
 | Date | Change | Author |
 |------|--------|--------|
-| 2026-08-08 | Milestone 3: Stripe Checkout, secure fulfillment, success page | Agent |
-| 2026-08-08 | Milestone 2 accepted | Owner |
-| 2026-08-08 | Milestone 1 accepted | Owner |
-
----
-
-## Build and Test Status
-
-| Check | Status | Last run |
-|-------|--------|----------|
-| Web build | ✅ | 2026-08-08 |
-| Worker tests (6) | ✅ | 2026-08-08 |
-| Full Stripe E2E (real test payment) | ➖ | Requires your Stripe test keys + webhook forwarding |
+| 2026-09-13 | Experiment stopped; documentation closed | Owner / Agent |
+| 2026-08-09 | Stripe checkout fix (Managed Payments); Sandbox E2E verified | Agent |
+| 2026-08-08 | Milestone 3: Stripe Checkout | Agent |
+| 2026-08-08 | Milestones 1–2 accepted | Owner |
 
 ---
 
 ## Next Steps
 
-1. **Configure Stripe test credentials** (human — see completion report)
-2. **Run end-to-end payment acceptance test**
-3. **Milestone 4** — production deployment (not started)
+**None.** Do not extend this experiment unless explicitly restarted as a new hypothesis with prior market validation.
+
+For historical local run instructions, see [README.md](README.md).

@@ -1,22 +1,24 @@
 # Roadmap
 
-**Last reviewed:** 2026-08-08  
-**Horizon:** Fast experiment — weeks, not quarters
+**Last reviewed:** 2026-09-13  
+**Experiment status:** **STOPPED / KILLED** (closed after Milestone 3)
 
 ---
 
-## Vision
+## Vision (original)
 
 Validate that people will pay a one-time ~€4.90 for a permanent editable dynamic QR. If revenue > €0, iterate; if not, stop cheaply.
 
+**Outcome:** Stopped before production. Hypothesis not pursued to real customers. Market deemed too commoditized for this generic offer.
+
 ---
 
-## Guiding Principles
+## Guiding Principles (unchanged — for reference)
 
-1. **Speed over sophistication** — smallest credible implementation per milestone
-2. **Evidence before features** — nothing from the NOT NOW list without proof
-3. **Manual is fine** — no admin dashboard, no automation theater
-4. **One KPI** — revenue > €0
+1. **Speed over sophistication**
+2. **Evidence before features**
+3. **Manual is fine**
+4. **One KPI** — revenue > €0 (never measured with real payments)
 
 ---
 
@@ -28,7 +30,7 @@ Validate that people will pay a one-time ~€4.90 for a permanent editable dynam
 | 🚧 | In progress |
 | 📋 | Planned |
 | ⏸️ | On hold |
-| ❌ | Cancelled |
+| ❌ | Cancelled / not pursued |
 
 ---
 
@@ -36,22 +38,7 @@ Validate that people will pay a one-time ~€4.90 for a permanent editable dynam
 
 **Goal:** Prove dynamic QR redirect + edit without regenerating QR.
 
-| Item | Status | Notes |
-|------|--------|-------|
-| D1 schema (slug, destination, token) | ✅ | |
-| `POST /api/qr` create | ✅ | |
-| `GET /q/{slug}` redirect | ✅ | |
-| `GET/PUT /api/manage/{slug}/{token}` | ✅ | |
-| Minimal React UI (create + manage) | ✅ | Functional only |
-| Worker integration tests | ✅ | |
-
-**Exit criteria:**
-
-- [x] QR points to our URL, not destination directly
-- [x] Redirect works to destination A
-- [x] Management URL changes destination to B
-- [x] Same QR redirects to B without regeneration
-- [x] Human physical scan test (owner)
+**Result:** Completed and accepted.
 
 ---
 
@@ -59,22 +46,7 @@ Validate that people will pay a one-time ~€4.90 for a permanent editable dynam
 
 **Goal:** Smallest credible product a non-technical user can understand and use.
 
-| Item | Status | Notes |
-|------|--------|-------|
-| Product landing + value prop | ✅ | |
-| Static QR (free, client-side) | ✅ | |
-| Dynamic QR result UX (3 concepts) | ✅ | Destination / QR / management link |
-| QR PNG download | ✅ | |
-| Management page redesign | ✅ | |
-| Pricing presentation (no fake checkout) | ✅ | Static free / Dynamic €4.90 |
-| Responsive polish | ✅ | Simple CSS, no UI framework |
-
-**Exit criteria:**
-
-- [x] Value proposition visible without reading docs
-- [x] Static and dynamic flows work with download
-- [x] Management workflow understandable without technical terms
-- [x] Human acceptance (owner)
+**Result:** Completed and accepted.
 
 ---
 
@@ -82,78 +54,55 @@ Validate that people will pay a one-time ~€4.90 for a permanent editable dynam
 
 **Goal:** Accept one-time €4.90 payment for a dynamic QR.
 
-| Item | Status | Notes |
-|------|--------|-------|
-| Stripe Checkout integration | ✅ | Hosted Checkout, inline price |
-| Gate dynamic QR on verified payment | ✅ | `/api/qr` blocked |
-| Post-payment delivery page | ✅ | `/success?session_id=` |
-| Webhook + idempotent fulfillment | ✅ | |
-
-**Exit criteria:**
-
-- [x] Unpaid path blocked
-- [x] Idempotent provisioning tested
-- [ ] End-to-end Stripe test payment (owner + credentials)
+**Result:** Completed. Stripe Sandbox checkout → payment → QR delivery → redirect → management edit verified locally. No live/production payments.
 
 ---
 
-## Milestone 4 — Production 📋
+## Milestone 4 — Production ❌
 
 **Goal:** Deploy on Cloudflare for real users.
 
-| Item | Status | Notes |
-|------|--------|-------|
-| Cloudflare D1 provisioning | 📋 | |
-| Worker + static assets deploy | 📋 | |
-| Custom domain (if needed) | 📋 | Evaluate only if required |
-| Basic error monitoring | 📋 | Minimal |
+**Status:** **Not pursued** — experiment killed before this milestone.
 
 ---
 
-## Milestone 5 — Distribution 📋
+## Milestone 5 — Distribution ❌
 
 **Goal:** Put in front of real users and measure revenue.
 
-| Item | Status | Notes |
-|------|--------|-------|
-| Launch channel(s) TBD | 📋 | |
-| Measure revenue > €0 | 📋 | Primary KPI |
-| Iterate or kill based on data | 📋 | |
+**Status:** **Not pursued** — no domain, no production launch, no real customer payments.
 
 ---
 
-## NOT NOW (explicit non-goals)
+## Lessons learned (experiment closure)
 
-**Do not build these unless the experiment succeeds and a milestone explicitly adds them:**
-
-- User accounts / login / OAuth
-- Teams / organizations
-- Subscriptions (we sell one-time, not recurring)
-- Advanced analytics dashboards
-- Folders, bulk QR, CSV import
-- Public API
-- Custom domains (unless proven necessary)
-- Mobile app
-- Admin back-office
-- AI features
-- Elaborate design system
-- CI/CD pipelines
-- Multi-layer clean architecture
-- Scan funnels, A/B testing infrastructure
+1. **Cursor can autonomously build a complete small product** from repo setup through Stripe integration.
+2. **ChatGPT → Cursor** was an effective workflow; it avoided manual code-copying.
+3. **Working software ≠ viable business.** Validate competition and differentiation **early**.
+4. **Commoditized markets** (free dynamic QR from many vendors) undermine a generic €4.90 one-time pitch without a sharper wedge.
+5. **Process improvement for future experiments:** research **competition, pricing, and distribution** before building payment infrastructure when the risk is market fit, not technical feasibility.
 
 ---
 
-## Dependencies and Risks
+## NOT NOW (permanent for this repo)
 
-| Risk / dependency | Impact | Mitigation |
-|-------------------|--------|------------|
-| Nobody pays | High | Kill fast; total sunk cost kept low |
-| QR spam/abuse | Medium | Rate limit later if needed |
-| Lost management URL = lost edit access | Medium | Clear UX warning; acceptable for M1 |
+All items below remain out of scope unless this repository is forked for a **new** experiment with a validated hypothesis:
+
+- Production deployment, custom domain, real-money launch
+- Accounts, subscriptions, analytics dashboards, API, etc. (see original NOT NOW list in git history)
+
+---
+
+## Dependencies and Risks (retrospective)
+
+| Risk | What happened |
+|------|----------------|
+| Nobody pays | Not tested in production; stopped on market grounds first |
+| Commoditized offer | **Primary kill reason** — insufficient differentiation vs free alternatives |
+| Over-building before validation | Payment stack built before competitive position was strong enough |
 
 ---
 
 ## Review Cadence
 
-- After each milestone: update [CURRENT_STATE.md](CURRENT_STATE.md)
-- After any payment attempt: record outcome in CURRENT_STATE
+**No further roadmap reviews.** This document is frozen as Experiment 001 evidence.
